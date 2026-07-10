@@ -65,6 +65,13 @@ func LoadConfig(
 		)
 		return nil, err
 	}
+	if err := validatePrivateReadableFile(pathConfig, "config file"); err != nil {
+		logger.ErrorContext(ctx, "refusing insecure config file",
+			slog.String("path", pathConfig),
+			slog.Any("error", err),
+		)
+		return nil, err
+	}
 
 	// parse config file
 	logger.DebugContext(ctx, "parse config file", slog.String("path", pathConfig))
@@ -119,6 +126,13 @@ func LoadConfig(
 		)
 		return nil, err
 	}
+	if err := validatePrivateReadableFile(serviceAccountKeyPath, "service account key file"); err != nil {
+		logger.ErrorContext(ctx, "refusing insecure service account key file",
+			slog.String("path", serviceAccountKeyPath),
+			slog.Any("error", err),
+		)
+		return nil, err
+	}
 
 	// parse service account key file
 	logger.DebugContext(ctx, "parse service account file",
@@ -153,4 +167,22 @@ func LoadConfig(
 	}
 
 	return &result, nil
+}
+
+func validatePrivateReadableFile(path string, description string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("failed to stat %s %s: %w", description, path, err)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("%s %s is not a regular file", description, path)
+	}
+	perm := info.Mode().Perm()
+	if perm&0007 != 0 {
+		return fmt.Errorf("%s %s must not be accessible by other users: mode %04o", description, path, perm)
+	}
+	if perm&0020 != 0 {
+		return fmt.Errorf("%s %s must not be group-writable: mode %04o", description, path, perm)
+	}
+	return nil
 }

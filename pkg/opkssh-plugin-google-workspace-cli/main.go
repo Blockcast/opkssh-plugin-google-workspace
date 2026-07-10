@@ -98,8 +98,12 @@ func Main() {
 				case "stderr":
 					logWriter = os.Stderr
 				default:
-					logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+					logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 					if err != nil {
+						return ctx, err
+					}
+					if err := logFile.Chmod(0600); err != nil {
+						_ = logFile.Close()
 						return ctx, err
 					}
 					logWriter = logFile

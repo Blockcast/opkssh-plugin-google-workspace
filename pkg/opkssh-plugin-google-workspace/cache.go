@@ -136,7 +136,7 @@ func (c *CacheFetcher) unsafeSave(ctx context.Context, logger *slog.Logger) erro
 
 	// create cache dir
 	parentPath := filepath.Dir(c.path)
-	err = os.MkdirAll(parentPath, 0600)
+	err = os.MkdirAll(parentPath, 0700)
 	if err != nil {
 		const message = "failed to create cache directory"
 		logger.ErrorContext(ctx, message,
@@ -170,6 +170,14 @@ func (c *CacheFetcher) unsafeSave(ctx context.Context, logger *slog.Logger) erro
 			err,
 		)
 		return err
+	}
+	if err := tempFile.Chmod(0600); err != nil {
+		const message = "failed to set temporary cache file permissions"
+		logger.ErrorContext(ctx, message,
+			slog.String("path", tempFile.Name()),
+			slog.Any("error", err),
+		)
+		return fmt.Errorf("%s path %s problem %w", message, tempFile.Name(), err)
 	}
 
 	// get path to temporary file

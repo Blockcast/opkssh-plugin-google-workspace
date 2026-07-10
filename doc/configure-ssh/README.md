@@ -107,13 +107,28 @@ EOF
 
 ```bash
 # Install the binary
-# TODO: acquire binary
-sudo mv opkssh-plugin-google-workspace /usr/local/bin/opkssh-plugin-google-workspace
-sudo chown root:opksshuser /usr/local/bin/opkssh-plugin-google-workspace
-sudo chmod 750 /usr/local/bin/opkssh-plugin-google-workspace
+wget -O opkssh-plugin-google-workspace https://github.com/Blockcast/opkssh-plugin-google-workspace/releases/download/<TAG>/opkssh-plugin-google-workspace_linux_amd64
+wget -O SHA256SUMS https://github.com/Blockcast/opkssh-plugin-google-workspace/releases/download/<TAG>/SHA256SUMS
+sha256sum -c SHA256SUMS
+sudo install -o root -g opksshuser -m 0750 opkssh-plugin-google-workspace /usr/local/bin/opkssh-plugin-google-workspace
+```
 
-# Connect the plugin to opkssh
+```bash
+# Prepare private state paths used by the policy plugin.
+sudo install -d -o opksshuser -g opksshuser -m 0700 /var/cache/opkssh-plugin-google-workspace
+sudo touch /var/log/opkssh-plugin-google-workspace.log
+sudo chown opksshuser:opksshuser /var/log/opkssh-plugin-google-workspace.log
+sudo chmod 0600 /var/log/opkssh-plugin-google-workspace.log
+```
 
+```bash
+# Install the Google service-account key out of world-readable paths.
+sudo install -d -o root -g opksshuser -m 0750 /etc/opkssh-plugin-google-workspace
+sudo install -o root -g opksshuser -m 0640 service-account.json /etc/opkssh-plugin-google-workspace/service-account.json
+```
+
+```bash
+# Connect the plugin to opkssh.
 sudo tee /etc/opk/policy.d/google-workspace.yml <<EOF
 name: Google Workspace
 command: /usr/local/bin/opkssh-plugin-google-workspace -v
@@ -128,7 +143,7 @@ google:
     client_id: <Client ID from the guide "Create OAuth application 'opkssh'">
   service_account:
     email:    <Service Account Email from the guide "Create Service Account 'opkssh'">
-    key_file: <Path to API Key file from the guide "Create Service Account 'opkssh'">
+    key_file: /etc/opkssh-plugin-google-workspace/service-account.json
   workspace:
     customer_id: <Customer ID from the guide "Create Service Account 'opkssh'">
 policy:
@@ -142,4 +157,5 @@ policy:
 EOF
 
 sudo chown root:opksshuser /etc/opkssh-plugin-google-workspace/config.yaml
+sudo chmod 0640 /etc/opkssh-plugin-google-workspace/config.yaml
 ```
