@@ -12,7 +12,9 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: default-tools
+      labels: arc-light
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -22,7 +24,9 @@ jobs:
 
   build:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on:
+      group: default-tools
+      labels: arc-light
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
