@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   test:
+    timeout-minutes: 15
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on:
       group: default-tools
@@ -24,6 +25,7 @@ jobs:
       - run: go test ./...
 
   build:
+    timeout-minutes: 15
     needs: test
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on:
